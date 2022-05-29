@@ -27,15 +27,15 @@ exports.transferir = async (req, res) => {
     const { nr_conta, nr_conta_receber, valor } = req.body;
 
     try {
-        const conta_pagar = await saldoPagar({ nr_conta, valor }, id);
-        await models.transacoesConta.create(
-            { 'conta_id':conta_pagar.id, 'tipo_transacao':'TRANSFERIANCIA - SAIDA', 'valor':valor, 'data_transacao':new Date()}
-        );
+        await saldoPagar({ nr_conta, valor }, id)
+            .then(conta => models.transacoesConta.create(
+                { 'conta_id':conta.id, 'tipo_transacao':'TRANSFERIANCIA - SAIDA', 'valor':valor, 'data_transacao':new Date()}
+            ));
 
-        const conta_receber = await saldoReceber({ nr_conta_receber, valor });
-        await models.transacoesConta.create(
-            { 'conta_id':conta_receber.id, 'tipo_transacao':'TRANSFERIANCIA - ENTRADA', 'valor':valor, 'data_transacao':new Date()}
-        );
+        await saldoReceber({ nr_conta_receber, valor })
+            .then(conta => models.transacoesConta.create(
+                { 'conta_id':conta.id, 'tipo_transacao':'TRANSFERIANCIA - ENTRADA', 'valor':valor, 'data_transacao':new Date()}
+            ));
 
         res.json({ message:'Transferência realiza com sucesso.' });
     } catch(error) {
